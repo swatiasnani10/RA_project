@@ -7,3 +7,7 @@
 
 
 #This is to keep record of the changes made every week, in the dataset and codes.
+
+
+#Week 5
+Data folder contains the baseline data and code folder contains 'Simulation_05' which is a stand-alone code file now used to generate the baseline data.
