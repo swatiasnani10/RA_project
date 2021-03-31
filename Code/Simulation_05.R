@@ -127,7 +127,7 @@ df_patphyspe = do.call("rbind", lapply(1:nrow(df_patphy), function(ridx=10){
 # generates 0-1 treatment outcomes by if specialist quality > patient outcome
 # rule: if quality > outcome, then 1; otherwise, 0
 # NOTE: 0 means success, 1 means death
-df_patphyspe$treatment_outcome = as.numeric(df_patphyspe$spe_quality > df_patphyspe$pat_outcome_t0)
+df_patphyspe$treatment_outcome = as.numeric(df_patphyspe$spe_quality > df_patphyspe$pat_outcome)
 
 
 # -------------------------------------------------------
