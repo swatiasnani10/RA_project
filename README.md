@@ -11,3 +11,9 @@
 
 #Week 5
 Data folder contains the baseline data and code folder contains 'Simulation_05' which is a stand-alone code file now used to generate the baseline data.
+
+#20200407 Update
+Changes in the baseline data through code file 'Simulation_06':
+1) Number of patients assigned to PCPs increase: Changed the parameter range.
+2) Market shares of specialists of a particular PCP look skewed/concentrated: Generate a function for market shares.
+3) Treatment outcomes not 0 for more than 50 percent of the patients, if the specialist is of very high quality: Changed the way I previously defined treatment outcomes.
