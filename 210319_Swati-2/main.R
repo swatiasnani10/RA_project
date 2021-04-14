@@ -1,16 +1,11 @@
 rm(list=ls())
 
-source("FunctionFolder/Funcs.r")
-
 # PARAMETERS
-#[20210406 Update]
-RangePat4EachPhy = 15:20 # how many patients to each physician, interval
+RangePat4EachPhy = 4:6 # how many patients to each physician, interval
 NumPhy = 100 # num of physicians
 NumSpe = 50  # num of specialists
 NumPat = NumPhy * max(RangePat4EachPhy) # upper bound of num of patients
 NumSpe4EachPhy = 5 # num of specialists that one physician has
-#[20210406 Update]
-MaxShrPreferredSpe = c(0.6,0.8) # interval of market share that the preferred specialists can take, it is a uniform rand
 
 # -------------------------------------------------------
 
@@ -26,11 +21,12 @@ df_spe = data.frame(
 # then, generates patients
 df_pat = data.frame(
     id_pat         = 1:NumPat,      # patient id
-    pat_outcome = runif(NumPat)  # patient outcome from Uniform(0,1) 
-    #Eg. pat_age        = sample(1:100, NumPat,replace = TRUE) # age of patient
+    pat_outcome_t0 = runif(NumPat)  # patient outcome from Uniform(0,1) in the benchmark period
+    # pat_age        = sample(1:100,NumPat,replace = TRUE) # age of patient
 )
 
 # -------------------------------------------------------
+#lapply will apply function pid to each element of 'id_phy'
 
 # pairs physicians and specialists, and make a big dataframe
 df_physpe = do.call("rbind", lapply(df_phy$id_phy, function(pid){
@@ -41,11 +37,8 @@ df_physpe = do.call("rbind", lapply(df_phy$id_phy, function(pid){
     spe_picked$id_phy  = pid
     # given the current physician and selected specialists,
     # generates market shares for each specialist form a Uniform(0,1)
-    # spe_picked$mkt_shr = runif(nrow(spe_picked))                         
-    # spe_picked$mkt_shr = spe_picked$mkt_shr / sum(spe_picked$mkt_shr)    
-    # [20210406 update]: we now make the distribution of mkt. shr more 
-    #                    skewed on one specialist
-    spe_picked$mkt_shr = Fn$gen_mktshr_baseline(nrow(spe_picked), MaxShrPreferredSpe = MaxShrPreferredSpe)
+    spe_picked$mkt_shr = runif(nrow(spe_picked))
+    spe_picked$mkt_shr = spe_picked$mkt_shr / sum(spe_picked$mkt_shr)
     return(spe_picked)
 }))
 
@@ -56,26 +49,26 @@ tmpvec_picked_pat = c()
 
 # now, let's send patients to physicians
 # NOTE: note that `lapply` is a parallel function s.t. the `tmpvec_picked_pat`
-#       will not be updated between two rounds of the loop
+#       will not be updated between two rounds of the loop. So, don't use lapply here.
 df_patphy = list()
 for(pid in df_phy$id_phy){
     # first, the physician randomly determines how many patients to pick
     num_pat_pick  = sample(RangePat4EachPhy, 1)
     # determines all patients that have not been selected
     pat_notpicked = setdiff(df_pat$id_pat, tmpvec_picked_pat)
-    # given a physician, randomly pick up patients who have not been picked by other physicians
+    # given a physician, randomly pick up 4-6 patients who have not been picked by other physicians
     id_picked   = sample(df_pat$id_pat[df_pat$id_pat %in% pat_notpicked], num_pat_pick)
     # save the selected patients to the picked namelist
     tmpvec_picked_pat = c(tmpvec_picked_pat, id_picked)
     # find the selected patients and mark them by the physician
-    pat_picked = df_pat[df_pat$id_pat %in% id_picked, ]
-    pat_picked$id_phy = pid
+    pat_picked = df_pat[df_pat$id_pat %in% id_picked, ]  #Display all columns for rows that have been picked
+    pat_picked$id_phy = pid                              #Add pid to df
     
     # save the results
     df_patphy[[pid]] = pat_picked
     
     # drop intermediate temp variables
-    rm(num_pat_pick,pat_notpicked,id_picked,pat_picked)
+    #rm(num_pat_pick,pat_notpicked,id_picked,pat_picked)
 } # for pid
 df_patphy = do.call("rbind", df_patphy)
 
@@ -129,9 +122,9 @@ df_patphyspe = do.call("rbind", lapply(1:nrow(df_patphy), function(ridx){
 # -------------------------------------------------------
 
 # generates 0-1 treatment outcomes by if specialist quality > patient outcome
-# rule: if quality > outcome, then patient survives; otherwise, dies
-# NOTE: 0 means dead, 1 means survived
-df_patphyspe$treatment_outcome = as.numeric(df_patphyspe$spe_quality > df_patphyspe$pat_outcome)
+# rule: if quality > outcome, then 1; otherwise, 0
+# NOTE: 0 means success, 1 means death
+df_patphyspe$treatment_outcome = as.numeric(df_patphyspe$spe_quality > df_patphyspe$pat_outcome_t0)
 
 
 # -------------------------------------------------------
@@ -150,16 +143,14 @@ df_patphyspe_baseline = do.call("rbind", lapply(df_phy$id_phy, function(pid){
         flag_match_spe_id = df_pps$id_spe == sid
         # counts the number of these rows (as denominator soon)
         num_total_pat = sum(flag_match_spe_id)
-        # counts the number of successes (i.e. treatment_outcome == 1, patients survived)
-        num_succe_pat = sum(df_pps$treatment_outcome[flag_match_spe_id] == 1)
+        # counts the number of successes (i.e. treatment_outcome == 0)
+        num_succe_pat = sum(df_pps$treatment_outcome[flag_match_spe_id] == 0)
         # computes success rates for the current specialist and save it
         df_pps$success_rate[flag_match_spe_id] = num_succe_pat / num_total_pat
     } # for sid
         
     return(df_pps)
 }))
-
-save(df_patphyspe_baseline ,file = "df_patphyspe_baseline.RData")
 
 
 
