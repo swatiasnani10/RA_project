@@ -27,8 +27,8 @@ Funcs$gen_mktshr_baseline = function(NumSpe, MaxShrPreferredSpe = c(0.6,0.8)){
 #Extract first element of list i.e. baseline data for the two relevant df for gen of updated mktshr
 #View(lidf_patphyspe[[1]]): has only those spec to whom patients were sent(<=5)
 #View(lidf_physpe[[1]]): has all 5 specialists assigned to phy
-
-Funcs$update_mktshr = function(df_physpe, df_patphyspe, default_mktshr_for_nohistory_success = 0.5){
+#[Update: 20210420]
+Funcs$update_mktshr = function(df_physpe, df_patphyspe, default_mktshr_for_nohistory_success = 0){
   # first, merge the two dataframes by (id_phy,id_spe), df_physpe as the left table as we want to retain all 5 spec
   df_merged = merge(df_physpe, df_patphyspe[,c("id_phy","id_spe","success_rate","totnum_pat_got")],  #keep columns relevant for gen of mkt shr
                     by = c("id_phy","id_spe"),

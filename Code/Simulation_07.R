@@ -22,7 +22,8 @@ df_phy = data.frame(
 # then, generates specialists dataframe with specialist quality
 df_spe = data.frame(
   id_spe = 1:NumSpe,          # specialist id
-  spe_quality = runif(NumSpe) # quality drawn from Uniform(0,1)
+  #[Update: 20210419]
+  spe_quality = runif(NumSpe, min=0.6, max=1) # quality drawn from Uniform(0.6,1) as we want less number of 0 treatment outcomes
 )
 # then, generates patients dataframe with patient outcome
 #df_pat = data.frame(
@@ -190,7 +191,8 @@ df_physpe = merge(
 )
 df_physpe = df_physpe[!duplicated(df_physpe),]
 # fill missing values by assumptions(Ask if this is okay?)
-df_physpe$success_rate[is.na(df_physpe$success_rate)] = 0.5
+#[Update: 20210420]
+df_physpe$success_rate[is.na(df_physpe$success_rate)] = 0
 df_physpe$totnum_pat_got[is.na(df_physpe$totnum_pat_got)] = 0
 
 

@@ -2,6 +2,7 @@
 # ---------------------------------------------------------
 
 # first of all, generate baseline data as done in 'Simulation_07.R'
+ 
 source("Code/Simulation_07.R")
 
 # ---------------------------------------------------------
@@ -61,7 +62,9 @@ for (iter in 1:NumSeqGene) {
   lidf_physpe[[iter+1]] = Funcs$update_mktshr(
     lidf_physpe[[iter]], 
     lidf_patphyspe[[iter]], 
-    default_mktshr_for_nohistory_success = 0.5   #Subject to change
+    #default_mktshr_for_nohistory_success = 0.5
+    #[Update: 20210419]
+    default_mktshr_for_nohistory_success = 0 #Subject to change
   )
   
   # generate new distinct patients
@@ -134,10 +137,10 @@ for (iter in 1:NumSeqGene) {
   }))
   
   # update successful rates
-  tmpdf_patphyspe$totnum_pat_got = tmpdf_patphyspe$totnum_pat_got + tmpdf_patphyspe$num_pat_thisperiod
   tmpdf_patphyspe$success_rate = 
-    (tmpdf_patphyspe$totnum_pat_got * tmpdf_patphyspe$success_rate + # num of historical successes
-       tmpdf_patphyspe$num_success_thisperiod) / tmpdf_patphyspe$totnum_pat_got
+   (tmpdf_patphyspe$totnum_pat_got * tmpdf_patphyspe$success_rate + # num of historical successes
+    tmpdf_patphyspe$num_success_thisperiod) / (tmpdf_patphyspe$totnum_pat_got + tmpdf_patphyspe$num_pat_thisperiod)
+  tmpdf_patphyspe$totnum_pat_got = tmpdf_patphyspe$totnum_pat_got + tmpdf_patphyspe$num_pat_thisperiod
   
   # finally, drop intermediate columns
   tmpdf_patphyspe[,c("num_pat_thisperiod","num_success_thisperiod")] = NULL
@@ -147,14 +150,30 @@ for (iter in 1:NumSeqGene) {
   
 } # for
 
+df_patphyspe_baseline = lidf_patphyspe[[1]]
+df_patphyspe_seq <- do.call("rbind", lidf_patphyspe)
+df_patphyspe_seq<-subset(df_patphyspe_seq, id_pat > 2000)
+save(df_patphyspe_seq ,file = "df_patphyspe_seq.RData")
+###################################################################################3
+  # to view baseline data
+  #View(lidf_patphyspe[[1]])
+  # to view data from first round 
+  #View(lidf_patphyspe[[2]])
+  #.
+  #.
+  #.
+  # to view data from twentieth round
+  #View(lidf_patphyspe[[21]])
+  
+
 ##Note: The 'tmdf_patphyspe' dataframe is the 21st dataframe, so after performing loop
 #for 20 rounds of incoming patient for all phy, we can see revision of market shares and success rates.
 #This 'tmdf_patphyspe' df is the same as 'View(lidf_patphyspe[[21]])'.
 #Can append all 21 dataframes in the lidf_patphyspe !!
 
-df_patphyspe_seq <- do.call("rbind", lidf_patphyspe)
-save(df_patphyspe_seq ,file = "df_patphyspe_seq.RData")
 
-#We see 1771 observations from benchmark data and 2000 obs(20 rounds*100 phy) shows updating of beliefs
+#We see 1749 observations from baseline data and 2000 obs(20 rounds*100 phy) shows updating of beliefs
+
+ 
 
 
